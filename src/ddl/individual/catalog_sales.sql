@@ -37,11 +37,12 @@ create table catalog_sales_text
     cs_net_profit             double
 )
 USING csv
-OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/catalog_sales")
+OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/catalog_sales.dat")
 ;
 drop table if exists catalog_sales;
 create table catalog_sales
 using parquet
+OPTIONS(path "${TPCDS_PARQUET_DIR}/catalog_sales")
 as (select * from catalog_sales_text)
 ;
 drop table if exists catalog_sales_text;

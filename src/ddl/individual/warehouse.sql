@@ -17,11 +17,12 @@ create table warehouse_text
     w_gmt_offset              double
 )
 USING csv
-OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/warehouse")
+OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/warehouse.dat")
 ;
 drop table if exists warehouse;
 create table warehouse
 using parquet
+OPTIONS(path "${TPCDS_PARQUET_DIR}/warehouse")
 as (select * from warehouse_text)
 ;
 drop table if exists warehouse_text;

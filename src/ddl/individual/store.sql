@@ -32,11 +32,12 @@ create table store_text
     s_tax_precentage          double
 )
 USING csv
-OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/store")
+OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/store.dat")
 ;
 drop table if exists store;
-create table store 
+create table store
 using parquet
+OPTIONS(path "${TPCDS_PARQUET_DIR}/store")
 as (select * from store_text)
 ;
 drop table if exists store_text;

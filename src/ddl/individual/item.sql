@@ -25,11 +25,12 @@ create table item_text
     i_product_name            string
 )
 USING csv
-OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/item")
+OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/item.dat")
 ;
 drop table if exists item;
 create table item
 using parquet
+OPTIONS(path "${TPCDS_PARQUET_DIR}/item")
 as (select * from item_text)
 ;
 drop table if exists item_text;

@@ -12,11 +12,12 @@ create table catalog_page_text
     cp_type                   string
 )
 USING csv
-OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/catalog_page")
+OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/catalog_page.dat")
 ;
 drop table if exists catalog_page;
 create table catalog_page
 using parquet
+OPTIONS(path "${TPCDS_PARQUET_DIR}/catalog_page")
 as (select * from catalog_page_text)
 ;
 drop table if exists catalog_page_text;

@@ -13,11 +13,12 @@ create table time_dim_text
     t_meal_time               string
 )
 USING csv
-OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/time_dim")
+OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/time_dim.dat")
 ;
 drop table if exists time_dim;
 create table time_dim
 using parquet
+OPTIONS(path "${TPCDS_PARQUET_DIR}/time_dim")
 as (select * from time_dim_text)
 ;
 drop table if exists time_dim_text;

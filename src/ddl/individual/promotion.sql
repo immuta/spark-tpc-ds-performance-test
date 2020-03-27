@@ -21,11 +21,12 @@ create table promotion_text
     p_discount_active         string
 )
 USING csv
-OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/promotion")
+OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/promotion.dat")
 ;
 drop table if exists promotion;
 create table promotion
 using parquet
+OPTIONS(path "${TPCDS_PARQUET_DIR}/promotion")
 as (select * from promotion_text)
 ;
 drop table if exists promotion_text;

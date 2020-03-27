@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 killtree() {
   local parent=$1 child
@@ -69,7 +69,7 @@ check_compile() {
 
 check_gendata() {
  num_datafiles=`find $TPCDS_GENDATA_DIR -name *.dat | wc -l`
- if [ "$num_datafiles" -lt 24 ]; then 
+ if [ "$num_datafiles" -lt 24 ]; then
   logError "TPC-DS data files have not been generated. Please complete option 2"
   echo     "before continuing with the currently selected option."
   return 1
@@ -78,7 +78,7 @@ check_gendata() {
 
 check_genqueries() {
  num_queries=`find $TPCDS_GENQUERIES_DIR -name *.sql | wc -l`
- if [ "$num_queries" -lt 99 ]; then 
+ if [ "$num_queries" -lt 99 ]; then
   logError "TPC-DS queries have not been generated. Please complete option 4"
   echo     "before continuing with the currently selected option."
   return 1
@@ -88,9 +88,9 @@ check_genqueries() {
 check_createtables() {
   result=$?
   if [ "$result" -ne 0 ]; then
-    return 1 
+    return 1
   fi
-  
+
   cd $SPARK_HOME
   DRIVER_OPTIONS="--driver-memory 4g --driver-java-options -Dlog4j.configuration=file:///${output_dir}/log4j.properties"
   EXECUTOR_OPTIONS="--executor-memory 2g --conf spark.executor.extraJavaOptions=-Dlog4j.configuration=file:///${output_dir}/log4j.properties"
@@ -102,7 +102,7 @@ check_createtables() {
   if cmp -s "$file1" "$file2"
   then
      logInfo "Checking pre-reqs for running TPC-DS queries is successful."
-     return 0 
+     return 0
   else
     logError "The rowcounts for TPC-DS tables are not correct. Please make sure option 1"
     echo     "is run before continuing with currently selected option"
@@ -132,25 +132,28 @@ logError() {
 set_environment() {
   bin_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   script_dir="$(dirname "$bin_dir")"
-  
+
   if [ -z "$TPCDS_ROOT_DIR" ]; then
      TPCDS_ROOT_DIR=${script_dir}
-  fi  
+  fi
   if [ -z "$TPCDS_LOG_DIR" ]; then
      TPCDS_LOG_DIR=${script_dir}/log
-  fi  
+  fi
   if [ -z "$TPCDS_DBNAME" ]; then
      TPCDS_DBNAME="TPCDS"
-  fi  
+  fi
   if [ -z "$TPCDS_GENDATA_DIR" ]; then
      TPCDS_GENDATA_DIR=${TPCDS_ROOT_DIR}/src/data
-  fi  
+  fi
+  if [ -z "$TPCDS_PARQUET_DIR" ]; then
+     TPCDS_PARQUET_DIR=${TPCDS_ROOT_DIR}/parquet
+  fi
   if [ -z "$TPCDS_GEN_QUERIES_DIR" ]; then
      TPCDS_GENQUERIES_DIR=${TPCDS_ROOT_DIR}/src/queries
-  fi  
+  fi
   if [ -z "$TPCDS_WORK_DIR" ]; then
      TPCDS_WORK_DIR=${TPCDS_ROOT_DIR}/work
-  fi  
+  fi
 }
 
 check_environment() {
@@ -161,7 +164,7 @@ check_environment() {
     logError "2. The userid running the script has permission to execute spark shell."
     logError "3. After setting up SPARK_HOME, re-run the script and choose this option."
     exit 1
- fi  
+ fi
 }
 
 template(){
@@ -171,7 +174,7 @@ template(){
             line=${line//\`/\\\`}
             line=${line//\$/\\\$}
             line=${line//\\\${/\${}
-            eval "echo \"$line\""; 
+            eval "echo \"$line\"";
     done < ${1}
 }
 
@@ -215,20 +218,20 @@ function run_tpcds_common {
     progress=`find $TPCDS_WORK_DIR -name "*.res" | wc -l`
     ProgressBar ${progress} ${NUM_QUERIES}
 
-    ps -p $script_pid > /dev/null 
+    ps -p $script_pid > /dev/null
     if [ $? == 1 ]; then
        error_code=1
     fi
-    if [ "$error_code" -gt 0 ] || [ "$progress" -ge $NUM_QUERIES ] ; then 
+    if [ "$error_code" -gt 0 ] || [ "$progress" -ge $NUM_QUERIES ] ; then
       cont=-1
     fi
     sleep 0.1
-  done 
+  done
   progress=`find $TPCDS_WORK_DIR -name "*.res" | wc -l`
-   
-  if [ "$progress" -lt $NUM_QUERIES ] ; then 
+
+  if [ "$progress" -lt $NUM_QUERIES ] ; then
     echo ""
-    logError "Failed to run TPCDS queries. Please look at ${TPCDS_WORK_DIR}/runqueries.out for error details" 
+    logError "Failed to run TPCDS queries. Please look at ${TPCDS_WORK_DIR}/runqueries.out for error details"
   else
     echo ""
     logInfo "TPCDS queries ran successfully. Below are the result details"
@@ -245,38 +248,38 @@ function run_subset_tpcds_queries {
   if [ -z "$run_list" ]; then
     logError "Empty query list is not allowed. Please supply a comma separated query list"
     return 1
-  fi  
+  fi
   touch ${TPCDS_WORK_DIR}/runlist.txt
   for query_no in $(echo $run_list | sed -n 1'p' | tr ',' '\n')
   do
     validate_querynum $query_no
     result=$?
-    if [ "$result" -eq 1 ]; then 
+    if [ "$result" -eq 1 ]; then
       logError "Supplied query numbers are either non-integers or not within valid range of 1-99"
       return 1
-    fi 
+    fi
     echo "$query_no" >> ${TPCDS_WORK_DIR}/runlist.txt
   done
   for i in `ls ${TPCDS_ROOT_DIR}/src/properties/*`
   do
     baseName="$(basename $i)"
     template $i > ${output_dir}/$baseName
-  done 
+  done
   for i in `ls ${TPCDS_ROOT_DIR}/src/ddl/*.sql`
   do
     baseName="$(basename $i)"
     template $i > ${output_dir}/$baseName
-  done 
+  done
   check_prereq "2"
   result=$?
-  
+
   NUM_QUERIES=`cat ${TPCDS_WORK_DIR}/runlist.txt | wc -l`
   # 1 added for final result.
-  NUM_QUERIES=`expr $NUM_QUERIES + 1` 
-  if [ "$result" -ne 1 ]; then 
+  NUM_QUERIES=`expr $NUM_QUERIES + 1`
+  if [ "$result" -ne 1 ]; then
     logInfo "Running TPCDS queries. Will take a few minutes depending upon the number of queries specified.. "
     run_tpcds_common
-  fi 
+  fi
 }
 
 function run_tpcds_queries {
@@ -291,17 +294,17 @@ function run_tpcds_queries {
   do
     baseName="$(basename $i)"
     template $i > ${output_dir}/$baseName
-  done 
+  done
   for i in `ls ${TPCDS_ROOT_DIR}/src/ddl/*.sql`
   do
     baseName="$(basename $i)"
     template $i > ${output_dir}/$baseName
-  done 
+  done
   # 1 add to 99 queries to signal the end of the run to progress bar
   NUM_QUERIES=100
   check_prereq "3"
   result=$?
-  if [ "$result" -ne 1 ]; then 
+  if [ "$result" -ne 1 ]; then
     logInfo "Running TPCDS queries. Will take a few hours.. "
     run_tpcds_common
   fi
@@ -324,14 +327,14 @@ function create_spark_tables {
   do
     baseName="$(basename $i)"
     template $i > ${output_dir}/$baseName
-  done 
+  done
   for i in `ls ${TPCDS_ROOT_DIR}/src/properties/*`
   do
     baseName="$(basename $i)"
     template $i > ${output_dir}/$baseName
-  done 
+  done
   result=$?
-  if [ "$result" -ne 1 ]; then 
+  if [ "$result" -ne 1 ]; then
     current_dir=`pwd`
     cd $SPARK_HOME
     DRIVER_OPTIONS="--driver-java-options -Dlog4j.configuration=file:///${output_dir}/log4j.properties"
@@ -352,17 +355,17 @@ function create_spark_tables {
         error_code=`cat ${TPCDS_WORK_DIR}/create_tables.out | grep -i "error" | wc -l`
       fi
 
-      ps -p $script_pid > /dev/null 
+      ps -p $script_pid > /dev/null
       if [ $? == 1 ]; then
          error_code=1
       fi
- 
-      if [ "$error_code" -gt 0 ] || [ "$progress" -gt 121 ] ; then 
+
+      if [ "$error_code" -gt 0 ] || [ "$progress" -gt 121 ] ; then
         cont=-1
       fi
       sleep 0.1
-    done  
-    if [ "$error_code" -gt 0 ] ; then 
+    done
+    if [ "$error_code" -gt 0 ] ; then
       logError "Failed to create spark tables. Please review the following logs"
       logError "${TPCDS_WORK_DIR}/create_tables.out"
       logError "${TPCDS_WORK_DIR}/temp/create_database.out"

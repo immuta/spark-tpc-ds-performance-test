@@ -9,11 +9,12 @@ create table ship_mode_text
     sm_contract               string
 )
 USING csv
-OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/ship_mode")
+OPTIONS(header "false", delimiter "|", path "${TPCDS_GENDATA_DIR}/ship_mode.dat")
 ;
 drop table if exists ship_mode;
 create table ship_mode
 using parquet
+OPTIONS(path "${TPCDS_PARQUET_DIR}/ship_mode")
 as (select * from ship_mode_text)
 ;
 drop table if exists ship_mode_text;
